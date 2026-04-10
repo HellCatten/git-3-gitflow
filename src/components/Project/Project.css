@@ -33,7 +33,7 @@
 
 .slider:before {
   position: absolute;
-  content: "";
+  content: '';
   height: 26px;
   width: 26px;
   left: 4px;
@@ -72,7 +72,9 @@ input:checked + .slider:before {
   color: #e74c3c;
 }
 
-select, input[type="date"] { /* Added date input styling */
+select,
+input[type='date'] {
+  /* Added date input styling */
   width: 100%;
   padding: 10px;
   border: 1px solid #ddd;
@@ -82,7 +84,8 @@ select, input[type="date"] { /* Added date input styling */
   transition: border-color 0.3s ease;
 }
 
-select:focus, input[type="date"]:focus {
+select:focus,
+input[type='date']:focus {
   border-color: #3498db;
   outline: none;
 }

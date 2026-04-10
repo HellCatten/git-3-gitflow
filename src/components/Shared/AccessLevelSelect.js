@@ -20,7 +20,7 @@ function AccessLevelSelect({ value, onChange, disabled }) {
         onChange={onChange}
         disabled={disabled}
       >
-        {accessLevels.map(level => (
+        {accessLevels.map((level) => (
           <option key={level.value} value={level.value}>
             {level.name}
           </option>

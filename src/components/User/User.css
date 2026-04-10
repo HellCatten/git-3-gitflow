@@ -4,7 +4,8 @@ textarea {
   line-height: 1.5;
 }
 
-.status, .results {
+.status,
+.results {
   margin-top: 20px;
   padding: 15px;
   background: white;
@@ -38,12 +39,16 @@ textarea {
   margin-top: 5px;
 }
 
-.copy-btn, .print-btn, .save-btn {
+.copy-btn,
+.print-btn,
+.save-btn {
   margin: 5px;
   background: #2ecc71;
 }
 
-.copy-btn:hover:not(:disabled), .print-btn:hover:not(:disabled), .save-btn:hover:not(:disabled) {
+.copy-btn:hover:not(:disabled),
+.print-btn:hover:not(:disabled),
+.save-btn:hover:not(:disabled) {
   background: #27ae60;
 }
 
@@ -71,7 +76,7 @@ textarea {
   margin-top: 20px;
 }
 
-input[type="file"] {
+input[type='file'] {
   padding: 5px;
 }
 

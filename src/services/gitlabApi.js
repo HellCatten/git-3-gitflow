@@ -1,5 +1,12 @@
 import axios from 'axios';
-import { USERS_ENDPOINT, GROUP_MEMBERS_ENDPOINT, PROJECT_MEMBERS_ENDPOINT, PROJECT_SHARE_ENDPOINT, PROJECT_ENDPOINT, PROJECT_FORKS_ENDPOINT } from '../constants/api';
+import {
+  USERS_ENDPOINT,
+  GROUP_MEMBERS_ENDPOINT,
+  PROJECT_MEMBERS_ENDPOINT,
+  PROJECT_SHARE_ENDPOINT,
+  PROJECT_ENDPOINT,
+  PROJECT_FORKS_ENDPOINT,
+} from '../constants/api';
 
 const getConfig = (token) => ({
   headers: {
@@ -9,21 +16,43 @@ const getConfig = (token) => ({
 });
 
 export async function createUser(url, token, payload) {
-  const response = await axios.post(`${url}${USERS_ENDPOINT}`, payload, getConfig(token));
+  const response = await axios.post(
+    `${url}${USERS_ENDPOINT}`,
+    payload,
+    getConfig(token)
+  );
   return response.data;
 }
 
-export async function addUserToGroup(url, token, groupId, userId, accessLevel = '30') {
+export async function addUserToGroup(
+  url,
+  token,
+  groupId,
+  userId,
+  accessLevel = '30'
+) {
   const endpoint = `${url}${GROUP_MEMBERS_ENDPOINT.replace(':id', encodeURIComponent(groupId))}`;
   try {
-    const response = await axios.post(endpoint, { user_id: userId, access_level: parseInt(accessLevel) }, getConfig(token));
+    const response = await axios.post(
+      endpoint,
+      { user_id: userId, access_level: parseInt(accessLevel) },
+      getConfig(token)
+    );
     return response.data;
   } catch (error) {
-    throw new Error(`Failed to add user to group "${groupId}": ${error.response?.status} - ${error.response?.data?.message || 'Not Found'}`);
+    throw new Error(
+      `Failed to add user to group "${groupId}": ${error.response?.status} - ${error.response?.data?.message || 'Not Found'}`
+    );
   }
 }
 
-export async function addMembersToGroup(url, token, groupId, username, accessLevel = '30') {
+export async function addMembersToGroup(
+  url,
+  token,
+  groupId,
+  username,
+  accessLevel = '30'
+) {
   const endpoint = `${url}${GROUP_MEMBERS_ENDPOINT.replace(':id', encodeURIComponent(groupId))}`;
   try {
     const response = await axios.post(
@@ -33,11 +62,19 @@ export async function addMembersToGroup(url, token, groupId, username, accessLev
     );
     return response.data;
   } catch (error) {
-    throw new Error(`Failed to add user "${username}" to group "${groupId}": ${error.response?.status} - ${error.response?.data?.message || 'Not Found'}`);
+    throw new Error(
+      `Failed to add user "${username}" to group "${groupId}": ${error.response?.status} - ${error.response?.data?.message || 'Not Found'}`
+    );
   }
 }
 
-export async function addMembersToProject(url, token, projectId, username, accessLevel = '30') {
+export async function addMembersToProject(
+  url,
+  token,
+  projectId,
+  username,
+  accessLevel = '30'
+) {
   const endpoint = `${url}${PROJECT_MEMBERS_ENDPOINT.replace(':id', encodeURIComponent(projectId))}`;
   try {
     const response = await axios.post(
@@ -47,7 +84,9 @@ export async function addMembersToProject(url, token, projectId, username, acces
     );
     return response.data;
   } catch (error) {
-    throw new Error(`Failed to add user "${username}" to project "${projectId}": ${error.response?.status} - ${error.response?.data?.message || 'Not Found'}`);
+    throw new Error(
+      `Failed to add user "${username}" to project "${projectId}": ${error.response?.status} - ${error.response?.data?.message || 'Not Found'}`
+    );
   }
 }
 
@@ -57,7 +96,9 @@ export async function shareProjectWithGroup(url, token, projectId, payload) {
     const response = await axios.post(endpoint, payload, getConfig(token));
     return response.data;
   } catch (error) {
-    throw new Error(`Failed to share project "${projectId}" with group "${payload.group_id}": ${error.response?.status} - ${error.response?.data?.message || 'Not Found'}`);
+    throw new Error(
+      `Failed to share project "${projectId}" with group "${payload.group_id}": ${error.response?.status} - ${error.response?.data?.message || 'Not Found'}`
+    );
   }
 }
 
@@ -65,10 +106,14 @@ export async function listProjectInvitedGroups(url, token, projectId) {
   const endpoint = `${url}${PROJECT_ENDPOINT.replace(':id', encodeURIComponent(projectId))}`;
   try {
     const response = await axios.get(endpoint, getConfig(token));
-    const groups = Array.isArray(response.data.shared_with_groups) ? response.data.shared_with_groups : [];
+    const groups = Array.isArray(response.data.shared_with_groups)
+      ? response.data.shared_with_groups
+      : [];
     return { groups, projectName: response.data.name || '' };
   } catch (error) {
-    throw new Error(`Failed to fetch project "${projectId}" details: ${error.response?.status} - ${error.response?.data?.message || 'Not Found'}`);
+    throw new Error(
+      `Failed to fetch project "${projectId}" details: ${error.response?.status} - ${error.response?.data?.message || 'Not Found'}`
+    );
   }
 }
 
@@ -91,7 +136,9 @@ export async function listGroupMembers(url, token, groupId) {
     }
     return allMembers;
   } catch (error) {
-    throw new Error(`Failed to fetch members for group "${groupId}": ${error.response?.status} - ${error.response?.data?.message || 'Not Found'}`);
+    throw new Error(
+      `Failed to fetch members for group "${groupId}": ${error.response?.status} - ${error.response?.data?.message || 'Not Found'}`
+    );
   }
 }
 
@@ -101,7 +148,9 @@ export async function forkProject(url, token, projectId, payload) {
     const response = await axios.post(endpoint, payload, getConfig(token));
     return response.data;
   } catch (error) {
-    throw new Error(`Failed to fork project "${projectId}" to "${payload.namespace_path}": ${error.response?.status} - ${error.response?.data?.message || 'Not Found'}`);
+    throw new Error(
+      `Failed to fork project "${projectId}" to "${payload.namespace_path}": ${error.response?.status} - ${error.response?.data?.message || 'Not Found'}`
+    );
   }
 }
 
@@ -124,6 +173,8 @@ export async function listProjectForks(url, token, projectId) {
     }
     return allForks;
   } catch (error) {
-    throw new Error(`Failed to fetch forks for project "${projectId}": ${error.response?.status} - ${error.response?.data?.message || 'Not Found'}`);
+    throw new Error(
+      `Failed to fetch forks for project "${projectId}": ${error.response?.status} - ${error.response?.data?.message || 'Not Found'}`
+    );
   }
 }
