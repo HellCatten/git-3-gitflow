@@ -13,14 +13,16 @@ function ToolsPage() {
     const updateToc = () => {
       if (contentRef.current) {
         const headers = contentRef.current.querySelectorAll('.section-card h2');
-        const items = Array.from(headers).map(header => ({
-          id: header.id || header.textContent.replace(/\s+/g, '-').toLowerCase(),
+        const items = Array.from(headers).map((header) => ({
+          id:
+            header.id || header.textContent.replace(/\s+/g, '-').toLowerCase(),
           text: header.textContent,
         }));
         setTocItems(items);
 
-        headers.forEach(header => {
-          if (!header.id) header.id = header.textContent.replace(/\s+/g, '-').toLowerCase();
+        headers.forEach((header) => {
+          if (!header.id)
+            header.id = header.textContent.replace(/\s+/g, '-').toLowerCase();
         });
       }
     };
@@ -64,9 +66,11 @@ function ToolsPage() {
         <aside className="tools-toc">
           <h3>On this page</h3>
           <ul>
-            {tocItems.map(item => (
+            {tocItems.map((item) => (
               <li key={item.id}>
-                <button onClick={() => scrollToSection(item.id)}>{item.text}</button>
+                <button onClick={() => scrollToSection(item.id)}>
+                  {item.text}
+                </button>
               </li>
             ))}
           </ul>
