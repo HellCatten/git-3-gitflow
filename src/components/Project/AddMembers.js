@@ -9,19 +9,33 @@ import { AppContext } from '../../utils/AppContext';
 import AccessLevelSelect from '../Shared/AccessLevelSelect';
 import './Project.css';
 
+/**
+ * Компонент AddMembers
+ * Позволяет массово добавлять существующих пользователей GitLab в указанную группу или проект.
+ */
 function AddMembers() {
+  // Получаем настройки из контекста (токены, url), если они там есть
   // eslint-disable-next-line no-unused-vars
   const { settingsState } = useContext(AppContext);
+
+  // Состояние переключателя: true — добавляем в группу, false — в проект
   const [isGroup, setIsGroup] = useState(true);
+
+  // Инициализация формы через кастомный хук
   const { formData, errors, handleChange, setErrors } = useForm({
-    id: '',
-    usernames: '',
-    fetchUrl: '',
-    accessLevel: '30', // Default to Developer
+    id: '', // ID или Path группы/проекта
+    usernames: '', // Список имен пользователей через запятую
+    fetchUrl: '', // URL для подгрузки списка имен
+    accessLevel: '30', // Уровень доступа (30 = Developer)
   });
-  const [results, setResults] = useState([]);
+
+  const [results, setResults] = useState([]); // Лог результатов операций
   const [isLoading, setIsLoading] = useState(false);
 
+  /**
+   * Обработка загрузки текстового файла (.txt)
+   * Читает файл, разбивает строки по запятым или переносам строк и очищает от пробелов.
+   */
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -29,9 +43,11 @@ function AddMembers() {
       reader.onload = (event) => {
         const text = event.target.result;
         const usernames = text
-          .split(/[\n,]+/)
-          .map((u) => u.trim())
-          .filter((u) => u);
+          .split(/[\n,]+/) // Регулярка: делим по переносу строки ИЛИ запятой
+          .map((u) => u.trim()) // Убираем лишние пробелы
+          .filter((u) => u); // Удаляем пустые строки
+
+        // Обновляем поле usernames в форме
         handleChange({
           target: { name: 'usernames', value: usernames.join(', ') },
         });
@@ -40,6 +56,9 @@ function AddMembers() {
     }
   };
 
+  /**
+   * Подгрузка имен пользователей с внешнего сервера (JSON)
+   */
   const handleFetchJson = async () => {
     if (!formData.fetchUrl) {
       setErrors({ ...errors, fetchUrl: 'Server URL is required' });
@@ -48,9 +67,12 @@ function AddMembers() {
     setIsLoading(true);
     try {
       const jsonData = await fetchJsonFromServer(formData.fetchUrl);
+      // Ожидаем либо объект { usernames: [...] }, либо просто массив строк
       const usernames =
         jsonData.usernames || (Array.isArray(jsonData) ? jsonData : []);
+
       if (!usernames.length) throw new Error('No usernames found in JSON');
+
       handleChange({
         target: { name: 'usernames', value: usernames.join(', ') },
       });
@@ -61,21 +83,28 @@ function AddMembers() {
     setIsLoading(false);
   };
 
+  /**
+   * Валидация перед отправкой запросов в GitLab
+   */
   const validateForm = () => {
     const newErrors = {};
     const token = localStorage.getItem('gitlabToken');
     const url = localStorage.getItem('gitlabUrl');
-    if (!token)
-      newErrors.token = 'Personal Access Token is required (set in Settings)';
-    if (!url) newErrors.url = 'GitLab URL is required (set in Settings)';
+
+    if (!token) newErrors.token = 'Personal Access Token is required';
+    if (!url) newErrors.url = 'GitLab URL is required';
     if (!formData.id)
       newErrors.id = `${isGroup ? 'Group' : 'Project'} ID or path is required`;
     if (!formData.usernames)
       newErrors.usernames = 'At least one username is required';
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
+  /**
+   * Основная логика добавления участников
+   */
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) {
@@ -84,19 +113,25 @@ function AddMembers() {
     }
 
     setIsLoading(true);
-    setResults([]);
+    setResults([]); // Очищаем лог перед новым запуском
+
     const token = localStorage.getItem('gitlabToken');
     const url = localStorage.getItem('gitlabUrl');
+
+    // Превращаем строку из textarea в массив чистых имен
     const usernames = formData.usernames
       .split(',')
       .map((u) => u.trim())
       .filter((u) => u);
+
     const selectedAccessLevel = formData.accessLevel;
     const newResults = [];
 
+    // Итерируемся по списку имен и вызываем API для каждого
     for (const username of usernames) {
       try {
         if (isGroup) {
+          // Вызов API для добавления в группу
           await addMembersToGroup(
             url,
             token,
@@ -105,9 +140,10 @@ function AddMembers() {
             selectedAccessLevel
           );
           newResults.push(
-            `Success: Added "${username}" to group "${formData.id}" with access level ${selectedAccessLevel}`
+            `Success: Added "${username}" to group "${formData.id}"`
           );
         } else {
+          // Вызов API для добавления в проект
           await addMembersToProject(
             url,
             token,
@@ -116,20 +152,24 @@ function AddMembers() {
             selectedAccessLevel
           );
           newResults.push(
-            `Success: Added "${username}" to project "${formData.id}" with access level ${selectedAccessLevel}`
+            `Success: Added "${username}" to project "${formData.id}"`
           );
         }
       } catch (error) {
+        // Если один пользователь не добавился (например, уже состоит в группе), пишем ошибку и идем дальше
         newResults.push(
           `Error: Failed to add "${username}" - ${error.message}`
         );
       }
     }
 
-    setResults(newResults);
+    setResults(newResults); // Выводим итоговый лог на экран
     setIsLoading(false);
   };
 
+  /**
+   * Очистка всех полей формы
+   */
   const resetForm = () => {
     handleChange({ target: { name: 'id', value: '' } });
     handleChange({ target: { name: 'usernames', value: '' } });
@@ -145,12 +185,11 @@ function AddMembers() {
       <p className="help-text">
         Add members to a group or project by specifying their usernames.
       </p>
+
       <form onSubmit={handleSubmit}>
+        {/* Переключатель Типа (Группа / Проект) */}
         <div>
           <label>Type:</label>
-          <p className="help-text">
-            Choose whether to add members to a group or a project.
-          </p>
           <div className="switch-container">
             <span className={isGroup ? 'active-option' : ''}>Group</span>
             <label className="switch">
@@ -165,12 +204,10 @@ function AddMembers() {
             <span className={!isGroup ? 'active-option' : ''}>Project</span>
           </div>
         </div>
+
+        {/* Поле ID (динамический заголовок в зависимости от isGroup) */}
         <div>
           <label>{isGroup ? 'Group ID or Path' : 'Project ID or Path'}:</label>
-          <p className="help-text">
-            Enter the ID or path of the {isGroup ? 'group' : 'project'} (e.g.,
-            "my-group" or "123").
-          </p>
           <input
             type="text"
             name="id"
@@ -181,17 +218,17 @@ function AddMembers() {
           />
           {errors.id && <span className="error">{errors.id}</span>}
         </div>
+
+        {/* Компонент выбора уровня доступа */}
         <AccessLevelSelect
           value={formData.accessLevel}
           onChange={handleChange}
           disabled={isLoading}
         />
+
+        {/* Текстовая область для имен */}
         <div>
           <label>Usernames:</label>
-          <p className="help-text">
-            Enter usernames separated by commas (e.g., "user1, user2") or
-            fetch/upload them.
-          </p>
           <textarea
             name="usernames"
             value={formData.usernames}
@@ -204,11 +241,10 @@ function AddMembers() {
             <span className="error">{errors.usernames}</span>
           )}
         </div>
+
+        {/* Подгрузка по ссылке */}
         <div className="fetch-json-container">
           <label>Fetch Usernames from Server:</label>
-          <p className="help-text">
-            Enter a URL to fetch a JSON list of usernames.
-          </p>
           <input
             type="text"
             name="fetchUrl"
@@ -222,11 +258,10 @@ function AddMembers() {
           </button>
           {errors.fetchUrl && <span className="error">{errors.fetchUrl}</span>}
         </div>
+
+        {/* Загрузка текстового файла */}
         <div>
           <label>Upload Usernames File:</label>
-          <p className="help-text">
-            Upload a text file with usernames (comma or newline separated).
-          </p>
           <input
             type="file"
             accept=".txt"
@@ -234,8 +269,10 @@ function AddMembers() {
             disabled={isLoading}
           />
         </div>
+
         {errors.token && <span className="error">{errors.token}</span>}
         {errors.url && <span className="error">{errors.url}</span>}
+
         <button type="submit" disabled={isLoading}>
           {isLoading ? 'Adding...' : 'Add Members'}
         </button>
@@ -243,6 +280,8 @@ function AddMembers() {
           Reset Form
         </button>
       </form>
+
+      {/* Список результатов (лог) */}
       {results.length > 0 && (
         <div className="results">
           <h3>Results</h3>
