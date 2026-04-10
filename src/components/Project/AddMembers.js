@@ -10,6 +10,7 @@ import AccessLevelSelect from '../Shared/AccessLevelSelect';
 import './Project.css';
 
 function AddMembers() {
+  // eslint-disable-next-line no-unused-vars
   const { settingsState } = useContext(AppContext);
   const [isGroup, setIsGroup] = useState(true);
   const { formData, errors, handleChange, setErrors } = useForm({
