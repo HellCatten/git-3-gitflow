@@ -1,14 +1,14 @@
 select {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 1.1em;
-    background: white;
-    transition: border-color 0.3s ease;
-  }
-  
-  select:focus {
-    border-color: #3498db;
-    outline: none;
-  }
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1.1em;
+  background: white;
+  transition: border-color 0.3s ease;
+}
+
+select:focus {
+  border-color: #3498db;
+  outline: none;
+}

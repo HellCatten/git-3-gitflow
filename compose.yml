@@ -4,6 +4,6 @@ services:
       context: .
       target: production
     ports:
-      - "80:80"
+      - '80:80'
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf

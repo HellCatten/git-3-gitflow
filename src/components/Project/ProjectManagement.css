@@ -3,44 +3,44 @@
   max-width: 800px;
   margin: 0 auto;
 }
-  
-  .toc {
-    width: 200px;
-    position: sticky;
-    top: 20px;
-    background: #f5f5f5;
-    padding: 10px;
-    border-radius: 5px;
-    height: fit-content;
-    max-height: 80vh;
-    overflow-y: auto;
-  }
-  
-  .toc h3 {
-    margin: 0 0 10px;
-    font-size: 1.1em;
-  }
-  
-  .toc ul {
-    list-style: none;
-    padding: 0;
-  }
-  
-  .toc button {
-    background: none;
-    border: none;
-    text-align: left;
-    padding: 5px;
-    color: #007bff;
-    cursor: pointer;
-    width: 100%;
-  }
-  
-  .toc button:hover {
-    background: #e0e0e0;
-    border-radius: 5px;
-  }
-  
-  .content {
-    flex: 1;
-  }
+
+.toc {
+  width: 200px;
+  position: sticky;
+  top: 20px;
+  background: #f5f5f5;
+  padding: 10px;
+  border-radius: 5px;
+  height: fit-content;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.toc h3 {
+  margin: 0 0 10px;
+  font-size: 1.1em;
+}
+
+.toc ul {
+  list-style: none;
+  padding: 0;
+}
+
+.toc button {
+  background: none;
+  border: none;
+  text-align: left;
+  padding: 5px;
+  color: #007bff;
+  cursor: pointer;
+  width: 100%;
+}
+
+.toc button:hover {
+  background: #e0e0e0;
+  border-radius: 5px;
+}
+
+.content {
+  flex: 1;
+}

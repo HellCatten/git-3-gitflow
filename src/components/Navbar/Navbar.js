@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import gitlabLogo from '../../assets/gitlab-logo.png'; // Adjust path if needed
@@ -11,10 +10,14 @@ function Navbar() {
         <Link to="/">
           <img src={gitlabLogo} alt="GitLab Logo" className="navbar-logo" />
         </Link>
-        <Link to="/tools" className="nav-link">Tools</Link>
+        <Link to="/tools" className="nav-link">
+          Tools
+        </Link>
       </div>
       <div className="navbar-right">
-        <Link to="/settings" className="nav-link">Settings</Link>
+        <Link to="/settings" className="nav-link">
+          Settings
+        </Link>
       </div>
     </nav>
   );
