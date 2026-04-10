@@ -6,18 +6,28 @@ import { AppContext } from '../../utils/AppContext';
 import AccessLevelSelect from '../Shared/AccessLevelSelect';
 import './Project.css';
 
+/**
+ * Компонент ShareProjectWithGroups
+ * Позволяет массово предоставить доступ к проекту для списка групп.
+ * Поддерживает ручной ввод JSON, загрузку из файла или получение по URL.
+ */
 function ShareProjectWithGroups() {
   const { settingsState } = useContext(AppContext);
   const [results, setResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+
   const { formData, errors, handleChange, setErrors } = useForm({
     projectId: '',
     jsonInput: '',
     fetchUrl: '',
-    accessLevel: '30', // Default to Developer
+    accessLevel: '30', // По умолчанию уровень Developer
     expiresAt: '',
   });
 
+  /**
+   * Обработчик загрузки файла с компьютера пользователя.
+   * Читает содержимое JSON файла и помещает его в текстовое поле формы.
+   */
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -27,17 +37,22 @@ function ShareProjectWithGroups() {
           target: { name: 'jsonInput', value: event.target.result },
         });
       };
-      reader.readAsText(file);
+      reader.readAsText(file); // Читаем файл как текст
     }
   };
 
+  /**
+   * Запрос JSON-данных со стороннего сервера.
+   */
   const handleFetchJson = async () => {
     if (!formData.fetchUrl) {
       setErrors({ ...errors, fetchUrl: 'Server URL is required' });
       return;
     }
+
     setIsLoading(true);
     try {
+      // Получаем JSON и форматируем его с отступами (2 пробела) для красивого отображения
       const jsonData = await fetchJsonFromServer(formData.fetchUrl);
       const jsonString = JSON.stringify(jsonData, null, 2);
       handleChange({ target: { name: 'jsonInput', value: jsonString } });
@@ -48,19 +63,27 @@ function ShareProjectWithGroups() {
     setIsLoading(false);
   };
 
+  /**
+   * Строгая валидация введенного JSON и остальных полей
+   */
   const validateForm = () => {
     const newErrors = {};
     const token = localStorage.getItem('gitlabToken');
     const url = localStorage.getItem('gitlabUrl');
+
     if (!token)
       newErrors.token = 'Personal Access Token is required (set in Settings)';
     if (!url) newErrors.url = 'GitLab URL is required (set in Settings)';
     if (!formData.projectId)
       newErrors.projectId = 'Project ID or path is required';
-    if (!formData.jsonInput) newErrors.jsonInput = 'JSON input is required';
-    else {
+
+    // Проверка корректности JSON
+    if (!formData.jsonInput) {
+      newErrors.jsonInput = 'JSON input is required';
+    } else {
       try {
         const parsed = JSON.parse(formData.jsonInput);
+        // Проверяем наличие ключа 'groups-id', что это массив и что все элементы - положительные числа
         if (
           !parsed['groups-id'] ||
           !Array.isArray(parsed['groups-id']) ||
@@ -70,17 +93,23 @@ function ShareProjectWithGroups() {
             'JSON must have a "groups-id" array with positive numeric IDs';
         }
       } catch {
+        // Ошибка выбросится, если синтаксис JSON нарушен (например, пропущена запятая)
         newErrors.jsonInput = 'Invalid JSON format';
       }
     }
+
     if (formData.expiresAt && !/^\d{4}-\d{2}-\d{2}$/.test(formData.expiresAt)) {
       newErrors.expiresAt =
         'Expiration date must be in YYYY-MM-DD format (e.g., 2016-09-26)';
     }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
+  /**
+   * Обработчик массовой отправки запросов
+   */
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) {
@@ -90,12 +119,14 @@ function ShareProjectWithGroups() {
 
     setIsLoading(true);
     setResults([]);
+
     const token = localStorage.getItem('gitlabToken');
     const url = localStorage.getItem('gitlabUrl');
     const { 'groups-id': groupIds } = JSON.parse(formData.jsonInput);
     const selectedAccessLevel = formData.accessLevel;
     const newResults = [];
 
+    // Отправляем запросы последовательно для каждой группы из JSON
     for (const groupId of groupIds) {
       const payload = {
         group_id: groupId,
@@ -115,10 +146,14 @@ function ShareProjectWithGroups() {
       }
     }
 
+    // Сохраняем все результаты (и успехи, и ошибки) для вывода на экран
     setResults(newResults);
     setIsLoading(false);
   };
 
+  /**
+   * Сброс формы к начальному состоянию
+   */
   const resetForm = () => {
     handleChange({ target: { name: 'projectId', value: '' } });
     handleChange({ target: { name: 'jsonInput', value: '' } });
@@ -136,7 +171,9 @@ function ShareProjectWithGroups() {
         Share a project with multiple groups by providing a JSON list of numeric
         group IDs.
       </p>
+
       <form onSubmit={handleSubmit}>
+        {/* Поле: ID проекта */}
         <div>
           <label>Project ID or Path:</label>
           <p className="help-text">
@@ -154,6 +191,8 @@ function ShareProjectWithGroups() {
             <span className="error">{errors.projectId}</span>
           )}
         </div>
+
+        {/* Поле: Ввод JSON вручную */}
         <div>
           <label>Groups JSON:</label>
           <p className="help-text">
@@ -165,23 +204,22 @@ function ShareProjectWithGroups() {
             value={formData.jsonInput}
             onChange={handleChange}
             rows="5"
-            placeholder={`{
-  "groups-id": [
-    123,
-    321
-  ]
-}`}
+            placeholder={`{\n  "groups-id": [\n    123,\n    321\n  ]\n}`}
             disabled={isLoading}
           />
           {errors.jsonInput && (
             <span className="error">{errors.jsonInput}</span>
           )}
         </div>
+
+        {/* Выбор уровня доступа */}
         <AccessLevelSelect
           value={formData.accessLevel}
           onChange={handleChange}
           disabled={isLoading}
         />
+
+        {/* Поле: Дата окончания доступа */}
         <div>
           <label>Expires At (Optional):</label>
           <p className="help-text">
@@ -199,6 +237,8 @@ function ShareProjectWithGroups() {
             <span className="error">{errors.expiresAt}</span>
           )}
         </div>
+
+        {/* Блок для получения JSON по URL */}
         <div className="fetch-json-container">
           <label>Fetch JSON from Server:</label>
           <p className="help-text">
@@ -218,6 +258,8 @@ function ShareProjectWithGroups() {
           </button>
           {errors.fetchUrl && <span className="error">{errors.fetchUrl}</span>}
         </div>
+
+        {/* Блок загрузки JSON с компьютера */}
         <div>
           <label>Upload JSON File:</label>
           <p className="help-text">
@@ -230,8 +272,12 @@ function ShareProjectWithGroups() {
             disabled={isLoading}
           />
         </div>
+
+        {/* Вывод глобальных ошибок */}
         {errors.token && <span className="error">{errors.token}</span>}
         {errors.url && <span className="error">{errors.url}</span>}
+
+        {/* Кнопки формы */}
         <button type="submit" disabled={isLoading}>
           {isLoading ? 'Sharing...' : 'Share Project'}
         </button>
@@ -239,6 +285,8 @@ function ShareProjectWithGroups() {
           Reset Form
         </button>
       </form>
+
+      {/* Окно результатов пакетной обработки */}
       {results.length > 0 && (
         <div className="results">
           <h3>Results</h3>
