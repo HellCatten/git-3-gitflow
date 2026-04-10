@@ -1,0 +1,110 @@
+.tools-page {
+  height: calc(100vh - 48px);
+  display: flex;
+  flex-direction: column;
+}
+
+.tools-layout {
+  display: flex;
+  height: calc(100vh - 60px); /* Adjust for navbar height */
+  flex: 1;
+}
+
+/* Desktop layout */
+.tools-submenu {
+  width: 200px;
+  background: #f5f5f5;
+  padding: 10px;
+  border-radius: 5px 0 0 5px;
+  height: 100%;
+  overflow-y: auto;
+  border-right: 1px solid #e3e3e3;
+}
+
+.tools-submenu nav {
+  display: flex;
+  flex-direction: column;
+}
+
+.tools-submenu a {
+  padding: 10px;
+  text-decoration: none;
+  color: #007bff;
+}
+
+.tools-submenu a:hover,
+.tools-submenu a.active {
+  background: #e0e0e0;
+  border-radius: 5px;
+}
+
+.tools-content {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  background: #fff;
+}
+
+.tools-content h1 {
+  margin-top: 0;
+}
+
+.tools-toc {
+  width: 250px;
+  background: #f5f5f5;
+  padding: 10px;
+  border-radius: 0 5px 5px 0;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.tools-toc h3 {
+  margin: 0 0 10px;
+  font-size: 1.1em;
+}
+
+.tools-toc ul {
+  list-style: none;
+  padding: 0;
+}
+
+.tools-toc button {
+  background: none;
+  border: none;
+  text-align: left;
+  padding: 5px;
+  color: #007bff;
+  cursor: pointer;
+  width: 100%;
+}
+
+.tools-toc button:hover {
+  background: #e0e0e0;
+  border-radius: 5px;
+}
+
+/* Responsive Design for Small Screens (e.g., < 768px) */
+@media (max-width: 900px) {
+  .tools-layout {
+    flex-direction: column;
+    height: auto; /* Allow content to determine height */
+  }
+
+  .tools-submenu {
+    width: 100%;
+    height: auto; /* Adjust height based on content */
+    border-radius: 5px 5px 0 0;
+    padding: 15px; /* Slightly more padding for touch */
+  }
+
+  .tools-content {
+    width: 100%;
+    padding: 15px; /* Adjust padding for touch */
+    margin: 0; /* Remove centering for full width */
+  }
+
+  .tools-toc {
+    display: none; /* Hide TOC on small screens */
+  }
+}
+

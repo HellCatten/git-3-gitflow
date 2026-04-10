@@ -1,0 +1,83 @@
+textarea {
+  resize: vertical;
+  min-height: 150px;
+  line-height: 1.5;
+}
+
+.status, .results {
+  margin-top: 20px;
+  padding: 15px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.success {
+  color: #27ae60;
+}
+
+.error-text {
+  color: #e74c3c;
+}
+
+.password-container {
+  margin-top: 10px;
+}
+
+.password {
+  font-family: 'Courier New', Courier, monospace;
+  background: #ecf0f1;
+  padding: 5px 10px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.password-note {
+  font-size: 0.9em;
+  color: #7f8c8d;
+  margin-top: 5px;
+}
+
+.copy-btn, .print-btn, .save-btn {
+  margin: 5px;
+  background: #2ecc71;
+}
+
+.copy-btn:hover:not(:disabled), .print-btn:hover:not(:disabled), .save-btn:hover:not(:disabled) {
+  background: #27ae60;
+}
+
+.user-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-top: 10px;
+}
+
+.user-item {
+  padding: 10px;
+  background: #ecf0f1;
+  border-radius: 4px;
+}
+
+.button-group {
+  margin-top: 15px;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.status-summary {
+  margin-top: 20px;
+}
+
+input[type="file"] {
+  padding: 5px;
+}
+
+.fetch-json-container {
+  display: flex;
+  gap: 15px;
+  flex-direction: column;
+  margin: 15px 0;
+}
