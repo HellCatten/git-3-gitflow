@@ -6,17 +6,25 @@ import { generatePassword } from '../../utils/helpers';
 import AccessLevelSelect from '../Shared/AccessLevelSelect';
 import './User.css';
 
+/**
+ * Компонент BulkUser
+ * Позволяет массово создавать пользователей GitLab, используя JSON-данные.
+ * Поддерживает ручной ввод, загрузку файла или получение данных по URL.
+ */
 function BulkUser() {
+  // Расширенное начальное состояние для хранения результатов массовой операции
   const initialState = {
-    formData: { jsonInput: '', group: '', fetchUrl: '', accessLevel: '30' }, // Default to Developer
-    results: [],
-    statusSummary: [],
+    formData: { jsonInput: '', group: '', fetchUrl: '', accessLevel: '30' },
+    results: [], // Массив созданных пользователей (с именами и паролями)
+    statusSummary: [], // Массив текстовых сообщений о статусе каждого запроса
     isLoading: false,
     errors: {},
     showResults: false,
   };
+
   const [state, setState] = useState(initialState);
 
+  // Использование хука для управления полями формы
   const { formData, errors, handleChange, setErrors } = useForm({
     jsonInput: state.formData.jsonInput,
     group: state.formData.group,
@@ -24,11 +32,15 @@ function BulkUser() {
     accessLevel: state.formData.accessLevel,
   });
 
+  /**
+   * Обработка загрузки локального JSON-файла
+   */
   const handleBulkFileUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
       reader.onload = (event) => {
+        // Записываем содержимое файла в текстовое поле jsonInput
         handleChange({
           target: { name: 'jsonInput', value: event.target.result },
         });
@@ -37,6 +49,9 @@ function BulkUser() {
     }
   };
 
+  /**
+   * Получение JSON-данных с удаленного сервера (например, по API ссылке)
+   */
   const handleFetchJson = async () => {
     if (!formData.fetchUrl) {
       setErrors({ ...errors, fetchUrl: 'Server URL is required' });
@@ -45,6 +60,7 @@ function BulkUser() {
     setState({ ...state, isLoading: true });
     try {
       const jsonData = await fetchJsonFromServer(formData.fetchUrl);
+      // Форматируем полученный JSON в красивую строку для отображения в textarea
       const jsonString = JSON.stringify(jsonData, null, 2);
       handleChange({ target: { name: 'jsonInput', value: jsonString } });
       setState({ ...state, isLoading: false });
@@ -55,19 +71,24 @@ function BulkUser() {
     }
   };
 
+  /**
+   * Валидация формы и структуры JSON
+   */
   const validateBulkForm = () => {
     const newErrors = {};
     const token = localStorage.getItem('gitlabToken');
     const url = localStorage.getItem('gitlabUrl');
-    if (!token)
-      newErrors.token = 'Personal Access Token is required (set in Settings)';
-    if (!url) newErrors.url = 'GitLab URL is required (set in Settings)';
-    else if (!/^https?:\/\/[^\s/$.?#].[^\s]*$/.test(url))
-      newErrors.url = 'Invalid URL format in Settings';
-    if (!formData.jsonInput) newErrors.jsonInput = 'JSON input is required';
-    else {
+
+    if (!token) newErrors.token = 'Personal Access Token is required';
+    if (!url) newErrors.url = 'GitLab URL is required';
+
+    if (!formData.jsonInput) {
+      newErrors.jsonInput = 'JSON input is required';
+    } else {
       try {
         const parsed = JSON.parse(formData.jsonInput);
+        // Проверка структуры: должен быть объект с ключом "users" (массив)
+        // и каждый пользователь должен иметь name и email
         if (
           !parsed.users ||
           !Array.isArray(parsed.users) ||
@@ -84,6 +105,9 @@ function BulkUser() {
     return Object.keys(newErrors).length === 0;
   };
 
+  /**
+   * Основной обработчик массового создания пользователей
+   */
   const handleBulkSubmit = async (e) => {
     e.preventDefault();
     if (!validateBulkForm()) {
@@ -107,9 +131,11 @@ function BulkUser() {
     const url = localStorage.getItem('gitlabUrl');
     const { users } = JSON.parse(formData.jsonInput);
     const selectedAccessLevel = formData.accessLevel;
+
     const newResults = [];
     const newStatusSummary = [];
 
+    // Последовательная обработка каждого пользователя из списка
     for (const user of users) {
       const username = user.email.split('@')[0];
       const password = generatePassword();
@@ -123,8 +149,11 @@ function BulkUser() {
       };
 
       try {
+        // Создание в GitLab
         const createdUser = await createUser(url, token, payload);
         let groupStatus = '';
+
+        // Опциональное добавление в группу
         if (formData.group) {
           try {
             await addUserToGroup(
@@ -134,16 +163,19 @@ function BulkUser() {
               createdUser.id,
               selectedAccessLevel
             );
-            groupStatus = ` User added to group "${formData.group}" with access level ${selectedAccessLevel}.`;
+            groupStatus = ` User added to group "${formData.group}".`;
           } catch (groupError) {
             groupStatus = ` ${groupError.message}`;
           }
         }
+
+        // Собираем успешный результат
         newResults.push({ name: user.name, email: user.email, password });
         newStatusSummary.push(
           `Success: User "${user.name}" created.${groupStatus}`
         );
       } catch (error) {
+        // Если один пользователь не создался, продолжаем цикл, но фиксируем ошибку
         newResults.push({ name: user.name, email: user.email, password: null });
         newStatusSummary.push(
           error.message || `Error creating user "${user.name}"`
@@ -151,6 +183,7 @@ function BulkUser() {
       }
     }
 
+    // Обновляем состояние финальными результатами цикла
     setState({
       ...state,
       isLoading: false,
@@ -160,6 +193,9 @@ function BulkUser() {
     });
   };
 
+  /**
+   * Копирование списка созданных пользователей в буфер обмена
+   */
   const copyBulkUserList = () => {
     const userListText = state.results
       .map(
@@ -171,6 +207,9 @@ function BulkUser() {
     alert('User list copied to clipboard!');
   };
 
+  /**
+   * Печать результатов (открывает новое окно с данными)
+   */
   const printBulkResults = () => {
     const printWindow = window.open('', '_blank');
     const content = document.querySelector('.results')?.outerHTML;
@@ -186,6 +225,9 @@ function BulkUser() {
     printWindow.close();
   };
 
+  /**
+   * Сохранение результатов в текстовый файл (.txt)
+   */
   const saveBulkUserList = () => {
     const userListText = state.results
       .map(
@@ -214,39 +256,30 @@ function BulkUser() {
     <div className="section-card">
       <h2>Create Multiple Users</h2>
       <p className="help-text">
-        Create multiple GitLab users at once by providing a JSON list, with
-        optional group assignment.
+        Create multiple GitLab users at once by providing a JSON list.
       </p>
+
       <form onSubmit={handleBulkSubmit}>
+        {/* Поле для ввода JSON вручную */}
         <div>
           <label>Users JSON:</label>
-          <p className="help-text">
-            Paste or fetch a JSON object with a 'users' array, each having
-            'name' and 'email' fields (see placeholder).
-          </p>
+          <p className="help-text">Paste a JSON object with a 'users' array.</p>
           <textarea
             name="jsonInput"
             value={formData.jsonInput}
             onChange={handleChange}
             rows="10"
-            placeholder={`{
-  "users": [
-    {"name": "Иван Иванов", "email": "ivanov1@example.com"},
-    {"name": "Иван Иванов", "email": "ivanov2@example.com"}
-  ]
-}`}
+            placeholder={`{ "users": [...] }`}
             disabled={state.isLoading}
           />
           {errors.jsonInput && (
             <span className="error">{errors.jsonInput}</span>
           )}
         </div>
+
+        {/* Настройка группы и уровня доступа для всех пользователей */}
         <div>
           <label>Add users to a group:</label>
-          <p className="help-text">
-            Optional: Enter the group ID or path (e.g., "my-group" or "123") to
-            assign all users to a group.
-          </p>
           <input
             type="text"
             name="group"
@@ -256,17 +289,16 @@ function BulkUser() {
             disabled={state.isLoading}
           />
         </div>
+
         <AccessLevelSelect
           value={formData.accessLevel}
           onChange={handleChange}
           disabled={state.isLoading}
         />
+
+        {/* Блок загрузки JSON по ссылке */}
         <div className="fetch-json-container">
           <label>Fetch JSON from Server:</label>
-          <p className="help-text">
-            Enter a URL to fetch a JSON list of users from your server (e.g.,
-            "https://your-server.com/users.json").
-          </p>
           <input
             type="text"
             name="fetchUrl"
@@ -284,12 +316,10 @@ function BulkUser() {
           </button>
           {errors.fetchUrl && <span className="error">{errors.fetchUrl}</span>}
         </div>
+
+        {/* Блок загрузки файла */}
         <div>
           <label>Upload JSON File:</label>
-          <p className="help-text">
-            Upload a .json file containing a 'users' array with 'name' and
-            'email' fields.
-          </p>
           <input
             type="file"
             accept=".json"
@@ -297,8 +327,10 @@ function BulkUser() {
             disabled={state.isLoading}
           />
         </div>
+
         {errors.token && <span className="error">{errors.token}</span>}
         {errors.url && <span className="error">{errors.url}</span>}
+
         <button type="submit" disabled={state.isLoading}>
           {state.isLoading ? 'Creating...' : 'Create Users'}
         </button>
@@ -310,6 +342,8 @@ function BulkUser() {
           Reset Form
         </button>
       </form>
+
+      {/* Отображение результатов после выполнения */}
       {state.showResults && (
         <div className="results">
           <h3>Created Users</h3>
@@ -326,37 +360,24 @@ function BulkUser() {
                   <strong>Password:</strong>{' '}
                   <span className="password">{user.password || 'N/A'}</span>
                 </p>
-                {user.password && (
-                  <p className="password-note">
-                    (Temporary - User must reset on first login)
-                  </p>
-                )}
               </div>
             ))}
           </div>
+
+          {/* Группа кнопок для действий с готовым списком */}
           <div className="button-group">
-            <button
-              onClick={copyBulkUserList}
-              disabled={state.isLoading}
-              className="copy-btn"
-            >
+            <button onClick={copyBulkUserList} className="copy-btn">
               Copy List
             </button>
-            <button
-              onClick={printBulkResults}
-              disabled={state.isLoading}
-              className="print-btn"
-            >
+            <button onClick={printBulkResults} className="print-btn">
               Print
             </button>
-            <button
-              onClick={saveBulkUserList}
-              disabled={state.isLoading}
-              className="save-btn"
-            >
+            <button onClick={saveBulkUserList} className="save-btn">
               Save to File
             </button>
           </div>
+
+          {/* Краткая сводка по каждому пользователю (успех/ошибка) */}
           <div className="status-summary">
             <h3>Status Summary</h3>
             {state.statusSummary.map((status, index) => (
